@@ -1,0 +1,35 @@
+package com.nov.thread;
+
+import java.util.Random;
+
+public class MyThredWhithImpliment implements Runnable{
+    int x;
+    public MyThredWhithImpliment(int x){
+        this.x=x;
+    }
+
+    @Override
+    public void run() {
+        String tname = Thread.currentThread().getName();
+        System.out.println("run被調用");
+        Random random = new Random();
+        for (int i = 0; i < 5; i++) {
+            try {
+                Thread.sleep(random.nextInt(10) * 100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("線程：" + tname + " ===  " + x);
+        }
+    }
+    public static void main(String[] args) {
+        Thread thread=new Thread(new MyThredWhithImpliment(1),"thread-0");
+        Thread thread1=new Thread(new MyThredWhithImpliment(2),"thread-1");
+        //啟動線程
+        thread.start();
+        thread1.start();
+        //普通調用
+        thread.run();
+        thread1.run();
+    }
+}

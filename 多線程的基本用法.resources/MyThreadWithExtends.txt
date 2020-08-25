@@ -1,0 +1,38 @@
+package com.nov.thread;
+
+import java.util.Random;
+
+public class MyThreadWithExtends extends Thread {
+
+    String flag;
+
+    public MyThreadWithExtends(String flag){
+        this.flag=flag;
+    }
+
+    @Override
+    public void run() {
+        String tname=Thread.currentThread().getName();
+        System.out.println("run被調用");
+        Random random=new Random();
+        for (int i=0;i<5;i++){
+            try {
+                Thread.sleep(random.nextInt(10)*100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("線程："+tname+" ===  "+flag);
+        }
+    }
+
+    public static void main(String[] args) {
+        Thread thread=new MyThreadWithExtends("a");
+        Thread thread1=new MyThreadWithExtends("b");
+        //啟動線程
+        thread.start();
+        thread1.start();
+        //普通調用
+        thread.run();
+        thread1.run();
+    }
+}

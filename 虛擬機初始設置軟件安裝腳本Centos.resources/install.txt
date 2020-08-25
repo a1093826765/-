@@ -1,0 +1,66 @@
+#!bin/bash
+install_jdk(){
+	yum -y install java-11-openjdk.x86_64
+	sed -i "1 r /root/jdk.txt" /etc/profile
+	source /etc/profile 
+}
+
+install_tomcat(){
+	yum -y install tomcat
+	service tomcat start
+}
+
+install_nginx(){
+	rpm -ivh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+	yum -y install nginx
+	service nginx start
+}
+
+install_mysql(){
+	rpm -ivh http://repo.mysql.com/mysql57-community-release-el7-11.noarch.rpm
+	cd /etc/yum.repos.d
+	yum -y install mysql-server
+	sed -i "5i skip-grant-tables" /etc/my.cnf
+	service mysqld restart
+	sleep 5
+	MYSQL=$(which mysql)
+	$MYSQL -u root -e "use mysql; update user set authentication_string=passworD('a2288311') where user='root'; flush privileges;"
+	sleep 3
+	sed -i "5d" /etc/my.cnf
+	service mysqld restart
+}
+
+pdexpect(){
+    expect -c " set timeout -1; 
+    spawn $1;
+    expect {
+    *yes/no* { send -- yes\r;exp_continue }
+    *Y/n* { send -- y\r; exp_continue }
+    *assword* { send -- $2\r; exp_continue }
+    eof { exit 0 }
+    }";
+}
+
+install_expect(){
+	yum -y install expect
+}
+
+install_vim(){
+	yum -y install vim
+}
+
+update_yum(){
+	yum -y update
+}
+
+install_run(){
+	update_yum
+	install_jdk
+	install_tomcat
+	install_nginx
+	install_expect
+	install_vim
+	install_mysql
+}
+
+install_run
