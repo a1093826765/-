@@ -1,5 +1,5 @@
 #!/bin/bash
-SERVERS="172.16.106.131 172.16.106.130"
+SERVERS="172.16.106.129 172.16.106.130"
 PASSWORD="a2288311"
 
 ##免密登陸
@@ -34,7 +34,6 @@ ssh_copy_id_to_all
 for SERVER in $SERVERS
     do
     scp /root/shell/install.sh root@$SERVER:/root
-    scp /root/shell/jdk.txt root@$SERVER:/root
     ssh root@$SERVER chmod -R 777 /root/install.sh
     ssh root@$SERVER sh /root/install.sh
     done
