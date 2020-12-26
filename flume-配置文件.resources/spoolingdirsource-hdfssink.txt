@@ -1,0 +1,72 @@
+1.Default Sink Processor
+		如果agent中，只有一个sink，默认就使用Default Sink Processor，这个sink processor是不强制用户，
+		将sink组成一个组！
+		
+		如果有多个sink，多个sink对接一个channel，不能选择Default Sink Processor
+		
+2.Failover Sink Processor
+		Failover Sink Processor维护了一个多个sink的有优先级的列表，按照优先级保证，至少有一个sink是可以干活的！
+		如果根据优先级发现，优先级高的sink故障了，故障的sink会被转移到一个故障的池中冷却！
+		在冷却时，故障的sink也会不管尝试发送event，一旦发送成功，此时会将故障的sink再移动到存活的池中！
+		
+		必需配置：
+		sinks – Space-separated list of sinks that are participating in the group 
+		processor.type default The component type name, needs to be failover 
+		processor.priority.<sinkName> – Priority value. <sinkName> must be one of the sink instances associated with the current sink group A higher priority value Sink gets activated earlier. A larger absolute value indicates higher priority 
+
+案例：  
+		agent1:   execsource--memorychannel----avrosink1--------agent2: avroSource---memorychannel----loggersink
+											-----avrosink2--------agent3: avroSource---memorychannel----loggersink
+											
+				avrosink1的优先级高，优先被Failover Sink Processor选中，此时只有agent2可以输出event！
+				一旦 agent2挂掉，此时avrosink1故障，由Failover Sink Processor选择剩下的avrosink2干活！
+				
+配置：
+#a1是agent的名称，在a1中定义一个r1，如果有多个，可用空格间隔
+a1.sources = r1
+a1.channels = c1
+a1.sinks = k1
+
+#组名.属性名=属性值
+a1.sources.r1.type = spooldir
+a1.sources.r1.command = /root/data/flume
+a1.sources.r1.deserializer.outputCharset = UTF-8 
+
+#定义channel
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1000
+a1.channels.c1.transactionCapacity = 100
+
+#定义sink
+a2.sinks.k1.type = hdfs
+#一旦路径中含有基于时间的转义序列，要求event的header中必须有timestamp=时间戳，如果没有需要启动使用本地时间戳
+a2.sinks.k1.hdfs.path = hdfs://localhost1:9000/flume/%Y%m%d/%H/%M
+#上传文件的前缀
+a2.sinks.k1.hdfs.filePrefix = hiveLogs-
+
+##以下三个和目录滚动相关,目录一旦设置了时间转义序列，基于时间戳滚动
+#是否按照时间滚动文件夹，四舍五入（这里只能舍，往下取值，基于下面两个参数取舍）
+a2.sinks.k1.hdfs.round = true
+#多少时间单位创建一个新的文件夹
+a2.sinks.k1.hdfs.roundValue = 1
+#重新定义时间单位
+a2.sinks.k1.hdfs.roundUnit = minute
+
+#是否使用本地时间戳
+a2.sinks.k1.hdfs.useLocalTimeStamp = true
+#积攒多少个Event才flush到HDFS一次
+a2.sinks.k1.hdfs.batchSize = 100
+
+##以下三个和文件滚动相关（随意满足一个即滚动）
+#多久生成一个新的文件
+a2.sinks.k1.hdfs.rollInterval = 30 
+#设置每个文件的滚动大小
+a2.sinks.k1.hdfs.rollSize = 134217700
+#每写多少个event滚动一起
+a2.sinks.k1.hdfs.rollCount = 0
+#以不压缩的文本形式保存数据
+a1.sinks.k1.hdfs.fileType=DataStream
+
+#连接组件，同一个sources可以连接多个channels,一个sink只能从一个channels拿数据
+a1.sources.r1.channels = c1
+a1.sinks.k1.channel=c1

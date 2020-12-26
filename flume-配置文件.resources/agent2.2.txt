@@ -1,0 +1,35 @@
+1. Multiplexing Channel Selector根据evnet header中属性，参考用户自己配置的映射信息，将event发送到指定的channel!
+
+a1.sources = r1
+a1.channels = c1 c2 c3 c4
+a1.sources.r1.selector.type = multiplexing
+a1.sources.r1.selector.header = state
+a1.sources.r1.selector.mapping.CZ = c1
+a1.sources.r1.selector.mapping.US = c2 c3
+a1.sources.r1.selector.default = c4
+
+r1中每个event根据header中key为state的值，进行选择，如果state=CZ,这类event发送到c1，
+如果state=US,这类event发送到c2，c3,state=其他，发送到c4
+
+二、案例
+
+agent1:  在localhost1
+a1.sources = r1
+a1.sinks = k1
+a1.channels = c1
+#组名名.属性名=属性值
+a1.sources.r1.type=avro
+a1.sources.r1.bind=localhost2
+a1.sources.r1.port=33333
+
+
+#定义sink
+a1.sinks.k1.type=logger
+
+#定义chanel
+a1.channels.c1.type=memory
+a1.channels.c1.capacity=1000
+
+#连接组件 同一个source可以对接多个channel，一个sink只能从一个channel拿数据！
+a1.sources.r1.channels=c1
+a1.sinks.k1.channel=c1

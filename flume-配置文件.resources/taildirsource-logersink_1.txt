@@ -1,0 +1,42 @@
+flume ng 1.7版本后提供！
+		
+		常见问题： TailDirSource采集的文件，不能随意重命名！如果日志在正在写入时，名称为 xxxx.tmp，写入完成后，滚动，
+					改名为xxx.log，此时一旦匹配规则可以匹配上述名称，就会发生数据的重复采集！
+	简介：
+		Taildir Source 可以读取多个文件最新追加写入的内容！
+		Taildir Source是可靠的，即使flume出现了故障或挂掉。Taildir Source在工作时，会将读取文件的最后的位置记录在一个
+		json文件中，一旦agent重启，会从之前已经记录的位置，继续执行tail操作！
+		
+		Json文件中，位置是可以修改，修改后，Taildir Source会从修改的位置进行tail操作！如果JSON文件丢失了，此时会重新从
+		每个文件的第一行，重新读取，这会造成数据的重复！
+		
+		Taildir Source目前只能读文本文件！
+		 
+	必需配置：
+		channels	–	 
+		type	–	The component type name, needs to be TAILDIR.
+		filegroups	–	Space-separated list of file groups. Each file group indicates a set of files to be tailed.
+		filegroups.<filegroupName>	–	Absolute path of the file group. Regular expression (and not file system patterns) can be used for filename only.
+
+配置：
+#a1是agent的名称，a1中定义了一个叫r1的source，如果有多个，使用空格间隔
+a1.sources = r1
+a1.sinks = k1
+a1.channels = c1
+#组名名.属性名=属性值
+a1.sources.r1.type=TAILDIR
+a1.sources.r1.filegroups=f1 f2
+a1.sources.r1.filegroups.f1=/home/atguigu/hi
+a1.sources.r1.filegroups.f2=/home/atguigu/test
+
+#定义sink
+a1.sinks.k1.type=logger
+a1.sinks.k1.maxBytesToLog=100
+
+#定义chanel
+a1.channels.c1.type=memory
+a1.channels.c1.capacity=1000
+
+#连接组件 同一个source可以对接多个channel，一个sink只能从一个channel拿数据！
+a1.sources.r1.channels=c1
+a1.sinks.k1.channel=c1

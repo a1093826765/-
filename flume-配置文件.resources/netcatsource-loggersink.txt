@@ -1,0 +1,23 @@
+#netcat案例
+#a1是agent的名称，在a1中定义一个r1，如果有多个，可用空格间隔
+a1.sources = r1
+a1.channels = c1
+a1.sinks = k1
+
+#组名.属性名=属性值
+a1.sources.r1.type = netcat
+a1.sources.r1.bind = localhost1
+a1.sources.r1.port = 44444
+
+#定义sink
+a1.sinks.k1.type = logger
+a1.sinks.k1.maxBytesToLog=100
+
+#定义channel
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1000
+a1.channels.c1.transactionCapacity = 100
+
+#连接组件，同一个sources可以连接多个channels,一个sink只能从一个channels拿数据
+a1.sources.r1.channels = c1
+a1.sinks.k1.channel=c1
